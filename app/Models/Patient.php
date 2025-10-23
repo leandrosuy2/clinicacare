@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Patient extends Model
 {
@@ -29,5 +30,37 @@ class Patient extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the photos for the patient.
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(PatientPhoto::class);
+    }
+
+    /**
+     * Get the appointments for the patient.
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Get the profile photo for the patient.
+     */
+    public function profilePhoto(): HasMany
+    {
+        return $this->hasMany(PatientPhoto::class)->where('photo_type', 'profile');
+    }
+
+    /**
+     * Get the evolution photos for the patient.
+     */
+    public function evolutionPhotos(): HasMany
+    {
+        return $this->hasMany(PatientPhoto::class)->where('photo_type', 'evolution');
     }
 }

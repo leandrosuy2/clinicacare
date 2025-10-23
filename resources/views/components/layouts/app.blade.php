@@ -144,12 +144,12 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <div class="h-8 w-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-medium text-white">{{ substr(auth()->user()->name, 0, 2) }}</span>
+                            <span class="text-sm font-medium text-white">{{ substr(auth()->user()?->name ?? 'GU', 0, 2) }}</span>
                         </div>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-gray-500">{{ auth()->user()->isDoctor() ? 'Médico' : 'Paciente' }}</p>
+                        <p class="text-sm font-medium text-gray-700">{{ auth()->user()?->name ?? 'Convidado' }}</p>
+                        <p class="text-xs text-gray-500">{{ auth()->check() ? (auth()->user()->isDoctor() ? 'Médico' : 'Paciente') : 'Visitante' }}</p>
                     </div>
                 </div>
             </div>
@@ -173,8 +173,21 @@
 
                             <!-- Page title -->
                             <div class="ml-4 lg:ml-0">
-                                <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
-                                <p class="text-sm text-gray-500">Bem-vindo ao ClinicaCare</p>
+                                @php
+                                    $currentPath = request()->path();
+                                    $pageTitle = 'Dashboard';
+                                    $pageSubtitle = 'Bem-vindo ao ClinicaCare';
+
+                                    if (str_starts_with($currentPath, 'patients')) {
+                                        $pageTitle = 'Pacientes';
+                                        $pageSubtitle = 'Gerencie todos os seus pacientes';
+                                    } elseif (str_starts_with($currentPath, 'profile')) {
+                                        $pageTitle = 'Meu Perfil';
+                                        $pageSubtitle = 'Gerencie suas informações';
+                                    }
+                                @endphp
+                                <h1 class="text-xl font-semibold text-gray-900">{{ $pageTitle }}</h1>
+                                <p class="text-sm text-gray-500">{{ $pageSubtitle }}</p>
                             </div>
                         </div>
 
@@ -219,7 +232,7 @@
                                 <button @click="open = !open" 
                                         class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <div class="h-8 w-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center">
-                                        <span class="text-sm font-medium text-white">{{ substr(auth()->user()->name, 0, 2) }}</span>
+                                        <span class="text-sm font-medium text-white">{{ substr(auth()->user()?->name ?? 'GU', 0, 2) }}</span>
                                     </div>
                                     <svg class="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -237,8 +250,8 @@
                                      x-transition:leave-end="transform opacity-0 scale-95"
                                      class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
                                     <div class="px-4 py-2 border-b border-gray-100">
-                                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()?->name ?? 'Convidado' }}</p>
+                                        <p class="text-xs text-gray-500">{{ auth()->user()?->email ?? '-' }}</p>
                                     </div>
                                     <a href="{{ route('profile') }}" 
                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">

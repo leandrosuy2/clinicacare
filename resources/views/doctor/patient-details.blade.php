@@ -1,5 +1,213 @@
 <x-app-layout>
-    <div class="p-6">
+    <div class="p-6" x-data="{
+        // Estado dos modais - TODOS FECHADOS POR PADRÃO
+        showEditPatientModal: false,
+        showNewConsultationModal: false,
+        showPhotoUploadModal: false,
+        
+        // Estado das abas
+        activeTab: 'personal-data',
+        
+        // Estado do upload de foto
+        photoType: 'profile',
+        photoFile: null,
+        photoDescription: '',
+        photoWeight: '',
+        photoDate: new Date().toISOString().split('T')[0],
+        
+        // Estado do agendamento
+        appointmentDate: '',
+        appointmentTime: '',
+        appointmentType: 'consultation',
+        appointmentNotes: '',
+        
+        // ID do paciente
+        patientId: {{ $patientId ?? 1 }},
+        
+        // Funções das abas
+        showTab(tabName) {
+            this.activeTab = tabName;
+        },
+        
+        // Funções dos modais
+        openEditPatientModal() {
+            console.log('Abrindo modal de edição');
+            this.showEditPatientModal = true;
+            document.body.style.overflow = 'hidden';
+        },
+        
+        closeEditPatientModal() {
+            console.log('Fechando modal de edição');
+            this.showEditPatientModal = false;
+            document.body.style.overflow = 'auto';
+        },
+        
+        openNewConsultationModal() {
+            console.log('Abrindo modal de consulta');
+            this.showNewConsultationModal = true;
+            document.body.style.overflow = 'hidden';
+            
+            // Definir data e hora padrão
+            const now = new Date();
+            this.appointmentDate = now.toISOString().split('T')[0];
+            this.appointmentTime = '09:00';
+        },
+        
+        closeNewConsultationModal() {
+            console.log('Fechando modal de consulta');
+            this.showNewConsultationModal = false;
+            document.body.style.overflow = 'auto';
+            this.resetAppointmentForm();
+        },
+        
+        openPhotoUploadModal(type) {
+            console.log('Abrindo modal de foto:', type);
+            this.photoType = type;
+            this.showPhotoUploadModal = true;
+            document.body.style.overflow = 'hidden';
+            
+            // Resetar formulário
+            this.photoFile = null;
+            this.photoDescription = '';
+            this.photoWeight = '';
+            this.photoDate = new Date().toISOString().split('T')[0];
+        },
+        
+        closePhotoUploadModal() {
+            console.log('Fechando modal de foto');
+            this.showPhotoUploadModal = false;
+            document.body.style.overflow = 'auto';
+            this.resetPhotoForm();
+        },
+        
+        // Funções de formulário
+        resetAppointmentForm() {
+            this.appointmentDate = '';
+            this.appointmentTime = '';
+            this.appointmentType = 'consultation';
+            this.appointmentNotes = '';
+        },
+        
+        resetPhotoForm() {
+            this.photoFile = null;
+            this.photoDescription = '';
+            this.photoWeight = '';
+            this.photoDate = new Date().toISOString().split('T')[0];
+        },
+        
+        // Upload de foto
+        handlePhotoUpload() {
+            if (!this.photoFile) {
+                this.showNotification('Selecione uma foto para enviar', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('photo', this.photoFile);
+            formData.append('patient_id', this.patientId);
+            formData.append('photo_type', this.photoType);
+            formData.append('description', this.photoDescription);
+            formData.append('weight', this.photoWeight);
+            formData.append('photo_date', this.photoDate);
+            
+            // Enviar para o backend
+            fetch('{{ route("photos.upload") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.showNotification(data.message, 'success');
+                    this.closePhotoUploadModal();
+                    // Recarregar a página para mostrar a nova foto
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    this.showNotification(data.error || 'Erro ao enviar foto', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showNotification('Erro ao enviar foto', 'error');
+            });
+        },
+        
+        // Agendamento de consulta
+        handleAppointmentSubmit() {
+            if (!this.appointmentDate || !this.appointmentTime) {
+                this.showNotification('Preencha a data e hora da consulta', 'error');
+                return;
+            }
+            
+            const appointmentDateTime = `${this.appointmentDate} ${this.appointmentTime}:00`;
+            
+            const data = {
+                patient_id: this.patientId,
+                appointment_date: appointmentDateTime,
+                type: this.appointmentType,
+                notes: this.appointmentNotes
+            };
+            
+            fetch('{{ route("appointments.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.showNotification(data.message, 'success');
+                    this.closeNewConsultationModal();
+                    // Recarregar a página para mostrar o novo agendamento
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    this.showNotification(data.error || 'Erro ao agendar consulta', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showNotification('Erro ao agendar consulta', 'error');
+            });
+        },
+        
+        // Sistema de notificações
+        showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-medium transform transition-all duration-300 translate-x-full`;
+            
+            if (type === 'success') {
+                notification.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500');
+            } else {
+                notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    }">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="mb-6 md:mb-8">
@@ -16,10 +224,10 @@
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                        <button onclick="openEditPatientModal()" class="w-full sm:w-auto px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm md:text-base">
+                        <button @click="openEditPatientModal()" class="w-full sm:w-auto px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm md:text-base">
                             Editar
                         </button>
-                        <button onclick="openNewConsultationModal()" class="w-full sm:w-auto px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base">
+                        <button @click="openNewConsultationModal()" class="w-full sm:w-auto px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base">
                             Nova Consulta
                         </button>
                     </div>
@@ -36,7 +244,7 @@
                             <div class="w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
                                 <span class="text-lg md:text-2xl lg:text-4xl font-bold text-white">MS</span>
                             </div>
-                            <button class="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm">
+                            <button @click="openPhotoUploadModal('profile')" class="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm">
                                 Alterar Foto
                             </button>
                         </div>
@@ -111,16 +319,24 @@
                         <!-- Tab Navigation -->
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex flex-wrap space-x-2 md:space-x-8 px-4 md:px-6" aria-label="Tabs">
-                                <button onclick="showTab('personal-data')" id="tab-personal-data" class="border-blue-500 text-blue-600 whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
+                                <button @click="showTab('personal-data')" 
+                                        :class="activeTab === 'personal-data' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                        class="whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
                                     Dados Pessoais
                                 </button>
-                                <button onclick="showTab('medical-history')" id="tab-medical-history" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
+                                <button @click="showTab('medical-history')" 
+                                        :class="activeTab === 'medical-history' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                        class="whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
                                     Histórico Clínico
                                 </button>
-                                <button onclick="showTab('evolution-photos')" id="tab-evolution-photos" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
+                                <button @click="showTab('evolution-photos')" 
+                                        :class="activeTab === 'evolution-photos' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                        class="whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
                                     Fotos de Evolução
                                 </button>
-                                <button onclick="showTab('consultations')" id="tab-consultations" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
+                                <button @click="showTab('consultations')" 
+                                        :class="activeTab === 'consultations' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                        class="whitespace-nowrap py-2 md:py-3 px-1 border-b-2 font-medium text-xs">
                                     Consultas
                                 </button>
                             </nav>
@@ -129,7 +345,7 @@
                         <!-- Tab Content -->
                         <div class="p-4 md:p-6">
                             <!-- Dados Pessoais Tab -->
-                            <div id="content-personal-data" class="tab-content space-y-4 md:space-y-6">
+                            <div x-show="activeTab === 'personal-data'" class="tab-content space-y-4 md:space-y-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Nome Completo</label>
@@ -183,7 +399,7 @@
                             </div>
 
                             <!-- Histórico Clínico Tab -->
-                            <div id="content-medical-history" class="tab-content hidden space-y-4 md:space-y-6">
+                            <div x-show="activeTab === 'medical-history'" class="tab-content hidden space-y-4 md:space-y-6">
                                 <div class="bg-blue-50 rounded-lg p-4 md:p-6">
                                     <h3 class="text-sm md:text-base font-semibold text-blue-900 mb-3 md:mb-4">Condições Médicas</h3>
                                     <div class="space-y-2 md:space-y-3">
@@ -240,7 +456,7 @@
                             </div>
 
                             <!-- Fotos de Evolução Tab -->
-                            <div id="content-evolution-photos" class="tab-content hidden space-y-4 md:space-y-6">
+                            <div x-show="activeTab === 'evolution-photos'" class="tab-content hidden space-y-4 md:space-y-6">
                                 <div class="text-center py-6 md:py-8">
                                     <div class="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <svg class="h-6 w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,13 +465,13 @@
                                     </div>
                                     <h3 class="text-sm md:text-base lg:text-lg font-medium text-gray-900 mb-2">Nenhuma foto de evolução</h3>
                                     <p class="text-xs md:text-sm text-gray-500 mb-4">Adicione fotos para acompanhar o progresso do paciente</p>
-                                    <button class="px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    <button @click="openPhotoUploadModal('evolution')" class="px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                         Adicionar Foto
                                     </button>
                                 </div>
 
                                 <!-- Exemplo de fotos (quando houver) -->
-                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 hidden">
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     <div class="bg-gray-100 rounded-lg p-3 md:p-4 text-center">
                                         <div class="w-full h-24 md:h-32 bg-gray-200 rounded mb-2"></div>
                                         <p class="text-xs text-gray-600">15/10/2024</p>
@@ -268,7 +484,7 @@
                             </div>
 
                             <!-- Consultas Tab -->
-                            <div id="content-consultations" class="tab-content hidden space-y-3 md:space-y-4">
+                            <div x-show="activeTab === 'consultations'" class="tab-content hidden space-y-3 md:space-y-4">
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div class="flex items-center">
@@ -331,82 +547,159 @@
         </div>
     </div>
 
-    <script>
-        // Tab functionality
-        function showTab(tabName) {
-            // Hide all tab contents
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
+    <!-- Modal Upload de Foto -->
+    <div x-show="showPhotoUploadModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         @click.self="closePhotoUploadModal()">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base md:text-lg font-medium text-gray-900">
+                        <span x-text="photoType === 'profile' ? 'Alterar Foto do Paciente' : 'Adicionar Foto de Evolução'"></span>
+                    </h3>
+                    <button @click="closePhotoUploadModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
 
-            // Remove active class from all tabs
-            const tabs = document.querySelectorAll('[id^="tab-"]');
-            tabs.forEach(tab => {
-                tab.classList.remove('border-blue-500', 'text-blue-600');
-                tab.classList.add('border-transparent', 'text-gray-500');
-            });
+                <!-- Form -->
+                <div class="space-y-4">
+                    <!-- File Upload -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Foto *</label>
+                        <input type="file" 
+                               @change="photoFile = $event.target.files[0]" 
+                               accept="image/*"
+                               class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
 
-            // Show selected tab content
-            const selectedContent = document.getElementById('content-' + tabName);
-            if (selectedContent) {
-                selectedContent.classList.remove('hidden');
-            }
+                    <!-- Photo Date -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Data da Foto *</label>
+                        <input type="date" 
+                               x-model="photoDate"
+                               class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
 
-            // Add active class to selected tab
-            const selectedTab = document.getElementById('tab-' + tabName);
-            if (selectedTab) {
-                selectedTab.classList.remove('border-transparent', 'text-gray-500');
-                selectedTab.classList.add('border-blue-500', 'text-blue-600');
-            }
-        }
+                    <!-- Weight (only for evolution photos) -->
+                    <div x-show="photoType === 'evolution'">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Peso (kg)</label>
+                        <input type="number" 
+                               x-model="photoWeight"
+                               step="0.1" 
+                               placeholder="75.5"
+                               class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
 
-        // Initialize first tab as active
-        document.addEventListener('DOMContentLoaded', function() {
-            showTab('personal-data');
-        });
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Descrição</label>
+                        <textarea rows="3" 
+                                  x-model="photoDescription"
+                                  placeholder="Descreva a foto..."
+                                  class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    </div>
 
-        // Modal functions for patient details
-        function openEditPatientModal() {
-            // In a real app, you would open a modal to edit patient data
-            showNotification('Funcionalidade de edição será implementada em breve!', 'info');
-        }
+                    <!-- Actions -->
+                    <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
+                        <button @click="closePhotoUploadModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button @click="handlePhotoUpload()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Enviar Foto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function openNewConsultationModal() {
-            // In a real app, you would open a modal to create a new consultation
-            showNotification('Funcionalidade de nova consulta será implementada em breve!', 'info');
-        }
+    <!-- Modal Nova Consulta -->
+    <div x-show="showNewConsultationModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         @click.self="closeNewConsultationModal()">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base md:text-lg font-medium text-gray-900">Nova Consulta</h3>
+                    <button @click="closeNewConsultationModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
 
-        // Notification system
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-medium transform transition-all duration-300 translate-x-full`;
-            
-            // Set color based on type
-            if (type === 'success') {
-                notification.classList.add('bg-green-500');
-            } else if (type === 'error') {
-                notification.classList.add('bg-red-500');
-            } else {
-                notification.classList.add('bg-blue-500');
-            }
-            
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                notification.classList.add('translate-x-full');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-    </script>
+                <!-- Form -->
+                <div class="space-y-4">
+                    <!-- Date and Time -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Data *</label>
+                            <input type="date" 
+                                   x-model="appointmentDate"
+                                   class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Hora *</label>
+                            <input type="time" 
+                                   x-model="appointmentTime"
+                                   class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- Type -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de Consulta *</label>
+                        <select x-model="appointmentType" class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="consultation">Consulta de Rotina</option>
+                            <option value="follow_up">Retorno</option>
+                            <option value="emergency">Emergência</option>
+                        </select>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Observações</label>
+                        <textarea rows="3" 
+                                  x-model="appointmentNotes"
+                                  placeholder="Observações sobre a consulta..."
+                                  class="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
+                        <button @click="closeNewConsultationModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button @click="handleAppointmentSubmit()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Agendar Consulta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            // Alpine.js já está carregado no bootstrap.js
+            console.log('Página de detalhes do paciente carregada');
+        </script>
+    @endpush
 </x-app-layout>

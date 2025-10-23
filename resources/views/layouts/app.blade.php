@@ -173,8 +173,21 @@
 
                             <!-- Page title -->
                             <div class="ml-4 lg:ml-0">
-                                <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
-                                <p class="text-sm text-gray-500">Bem-vindo ao ClinicaCare</p>
+                                @php
+                                    $currentPath = request()->path();
+                                    $pageTitle = 'Dashboard';
+                                    $pageSubtitle = 'Bem-vindo ao ClinicaCare';
+
+                                    if (str_starts_with($currentPath, 'patients')) {
+                                        $pageTitle = 'Pacientes';
+                                        $pageSubtitle = 'Gerencie todos os seus pacientes';
+                                    } elseif (str_starts_with($currentPath, 'profile')) {
+                                        $pageTitle = 'Meu Perfil';
+                                        $pageSubtitle = 'Gerencie suas informações';
+                                    }
+                                @endphp
+                                <h1 class="text-xl font-semibold text-gray-900">{{ $pageTitle }}</h1>
+                                <p class="text-sm text-gray-500">{{ $pageSubtitle }}</p>
                             </div>
                         </div>
 

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="p-4 md:p-6">
+    <div class="p-4 md:p-6" x-data="patientManager()">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="mb-6 md:mb-8">
@@ -8,7 +8,7 @@
                         <h1 class="text-xl md:text-2xl font-bold text-gray-900">Pacientes</h1>
                         <p class="text-sm md:text-base text-gray-600">Gerencie todos os seus pacientes</p>
                     </div>
-                    <button onclick="openNewPatientModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base">
+                    <button @click="openNewPatientModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base">
                         Novo Paciente
                     </button>
                 </div>
@@ -16,32 +16,40 @@
 
             <!-- Search and Filters -->
             <div class="bg-white rounded-lg shadow p-4 md:p-6 mb-4 md:mb-6">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                            <input type="text" placeholder="Buscar pacientes por nome, email ou telefone..." 
-                                   class="block w-full pl-8 md:pl-10 pr-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   onkeyup="filterPatients(this.value)">
+                <div class="space-y-4">
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
                         </div>
+                        <input type="text" placeholder="Buscar pacientes por nome, email ou telefone..." 
+                               class="block w-full pl-8 md:pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               x-model="searchTerm"
+                               @input="filterPatients()">
                     </div>
-                    <div class="flex gap-2">
-                        <select class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option>Todos os Status</option>
-                            <option>Ativo</option>
-                            <option>Inativo</option>
-                            <option>Novo</option>
-                        </select>
-                        <select class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option>Todos os Pacientes</option>
-                            <option>Meta Atingida</option>
-                            <option>Em Progresso</option>
-                            <option>Iniciando</option>
-                        </select>
+                    
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                            <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                <option>Todos os Status</option>
+                                <option>Ativo</option>
+                                <option>Inativo</option>
+                                <option>Novo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Progresso</label>
+                            <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                <option>Todos os Pacientes</option>
+                                <option>Meta Atingida</option>
+                                <option>Em Progresso</option>
+                                <option>Iniciando</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -49,7 +57,9 @@
             <!-- Patients Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 <!-- Patient Card 1 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 1) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 1) }}'"
+                     x-show="isPatientVisible(1, 'Maria Silva', '32 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -87,12 +97,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">25/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -104,7 +114,9 @@
                 </div>
 
                 <!-- Patient Card 2 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 2) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 2) }}'"
+                     x-show="isPatientVisible(2, 'João Santos', '28 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
@@ -142,12 +154,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">22/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -159,7 +171,9 @@
                 </div>
 
                 <!-- Patient Card 3 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 3) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 3) }}'"
+                     x-show="isPatientVisible(3, 'Ana Costa', '35 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
@@ -197,12 +211,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">20/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -214,7 +228,9 @@
                 </div>
 
                 <!-- Patient Card 4 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 4) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 4) }}'"
+                     x-show="isPatientVisible(4, 'Pedro Ferreira', '41 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center">
@@ -252,12 +268,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">28/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -269,7 +285,9 @@
                 </div>
 
                 <!-- Patient Card 5 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 5) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 5) }}'"
+                     x-show="isPatientVisible(5, 'Lucas Rodrigues', '29 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
@@ -307,12 +325,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">30/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -324,7 +342,9 @@
                 </div>
 
                 <!-- Patient Card 6 -->
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('doctor.patient-details', 6) }}'">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" 
+                     @click="window.location.href='{{ route('doctor.patient-details', 6) }}'"
+                     x-show="isPatientVisible(6, 'Carla Mendes', '37 anos')">
                     <div class="p-3 md:p-4 lg:p-6">
                         <div class="flex items-center mb-3">
                             <div class="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -362,12 +382,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-gray-500">26/10</span>
                                 <div class="flex space-x-1">
-                                    <button onclick="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
+                                    <button @click.stop="openEditPatientModal(1)" title="Editar paciente" class="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </button>
-                                    <button onclick="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
+                                    <button @click.stop="openDeletePatientModal(1, 'Maria Silva')" title="Excluir paciente" class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded">
                                         <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -379,20 +399,31 @@
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-6 md:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="text-xs md:text-sm text-gray-700">
-                    Mostrando <span class="font-medium">1</span> a <span class="font-medium">6</span> de <span class="font-medium">24</span> pacientes
+            <!-- Pagination - Only show if more than 1 page -->
+            <div id="pagination-container" class="mt-8 items-center justify-between hidden">
+                <div class="text-sm text-gray-700">
+                    Mostrando <span class="font-medium" id="showing-start">1</span> a 
+                    <span class="font-medium" id="showing-end">6</span> de 
+                    <span class="font-medium" id="total-patients">6</span> pacientes
                 </div>
-                <div class="flex space-x-2">
-                    <button class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">
-                        Anterior
+                
+                <div class="flex items-center space-x-1">
+                    <button id="prev-btn" onclick="changePage(currentPage - 1)" 
+                            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
                     </button>
-                    <button class="px-3 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg">1</button>
-                    <button class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">2</button>
-                    <button class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">3</button>
-                    <button class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">
-                        Próximo
+                    
+                    <div id="page-numbers" class="flex">
+                        <!-- Pages will be generated by JavaScript -->
+                    </div>
+                    
+                    <button id="next-btn" onclick="changePage(currentPage + 1)" 
+                            class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -400,13 +431,21 @@
     </div>
 
     <!-- Modal Novo Paciente -->
-    <div id="newPatientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div x-show="showNewPatientModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         @click.self="closeNewPatientModal()">
         <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base md:text-lg font-medium text-gray-900">Novo Paciente</h3>
-                    <button onclick="closeNewPatientModal()" class="text-gray-400 hover:text-gray-600">
+                    <button @click="closeNewPatientModal()" class="text-gray-400 hover:text-gray-600">
                         <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -478,10 +517,10 @@
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
-                        <button type="button" onclick="closeNewPatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <button type="button" @click="closeNewPatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             Cancelar
                         </button>
-                        <button type="submit" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <button type="submit" @click="handleNewPatientSubmit($event)" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             Criar Paciente
                         </button>
                     </div>
@@ -491,13 +530,21 @@
     </div>
 
     <!-- Modal Editar Paciente -->
-    <div id="editPatientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div x-show="showEditPatientModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         @click.self="closeEditPatientModal()">
         <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base md:text-lg font-medium text-gray-900">Editar Paciente</h3>
-                    <button onclick="closeEditPatientModal()" class="text-gray-400 hover:text-gray-600">
+                    <button @click="closeEditPatientModal()" class="text-gray-400 hover:text-gray-600">
                         <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -569,10 +616,10 @@
 
                     <!-- Actions -->
                     <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
-                        <button type="button" onclick="closeEditPatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <button type="button" @click="closeEditPatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             Cancelar
                         </button>
-                        <button type="submit" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <button type="submit" @click="handleEditPatientSubmit($event)" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             Salvar Alterações
                         </button>
                     </div>
@@ -582,7 +629,15 @@
     </div>
 
     <!-- Modal Confirmar Exclusão -->
-    <div id="deletePatientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div x-show="showDeletePatientModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         @click.self="closeDeletePatientModal()">
         <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <div class="mx-auto flex items-center justify-center h-10 w-10 md:h-12 md:w-12 rounded-full bg-red-100 mb-4">
@@ -592,14 +647,14 @@
                 </div>
                 <div class="text-center">
                     <h3 class="text-base md:text-lg font-medium text-gray-900 mb-2">Confirmar Exclusão</h3>
-                    <p class="text-xs md:text-sm text-gray-500 mb-6">
+                    <p class="text-xs md:text-sm text-gray-500 mb-6" x-text="deleteMessage">
                         Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                        <button onclick="closeDeletePatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <button @click="closeDeletePatientModal()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             Cancelar
                         </button>
-                        <button onclick="confirmDeletePatient()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <button @click="confirmDeletePatient()" class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                             Excluir
                         </button>
                     </div>
@@ -608,212 +663,7 @@
         </div>
     </div>
 
-    <script>
-        // Modal functions
-        function openNewPatientModal() {
-            document.getElementById('newPatientModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-        }
-
-        function closeNewPatientModal() {
-            document.getElementById('newPatientModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            // Clear form
-            document.querySelector('#newPatientModal form').reset();
-        }
-
-        function openEditPatientModal(patientId = null) {
-            document.getElementById('editPatientModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            // If patientId is provided, load patient data
-            if (patientId) {
-                loadPatientData(patientId);
-            }
-        }
-
-        function closeEditPatientModal() {
-            document.getElementById('editPatientModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function openDeletePatientModal(patientId = null, patientName = '') {
-            document.getElementById('deletePatientModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            // Update confirmation message with patient name
-            if (patientName) {
-                const messageElement = document.querySelector('#deletePatientModal p');
-                messageElement.textContent = `Tem certeza que deseja excluir o paciente "${patientName}"? Esta ação não pode ser desfeita.`;
-            }
-            
-            // Store patient ID for deletion
-            document.getElementById('deletePatientModal').setAttribute('data-patient-id', patientId);
-        }
-
-        function closeDeletePatientModal() {
-            document.getElementById('deletePatientModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function confirmDeletePatient() {
-            const modal = document.getElementById('deletePatientModal');
-            const patientId = modal.getAttribute('data-patient-id');
-            
-            // Here you would implement the actual deletion logic
-            console.log('Deleting patient:', patientId);
-            
-            // Show success message
-            showNotification('Paciente excluído com sucesso!', 'success');
-            
-            closeDeletePatientModal();
-            
-            // Remove patient card from UI (in a real app, this would be handled by the backend)
-            // For demo purposes, we'll just refresh the page
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
-
-        // Form submission handlers
-        function handleNewPatientSubmit(event) {
-            event.preventDefault();
-            
-            // Get form data
-            const formData = new FormData(event.target);
-            const patientData = Object.fromEntries(formData);
-            
-            console.log('New patient data:', patientData);
-            
-            // Here you would send data to backend
-            // For demo purposes, show success message
-            showNotification('Paciente criado com sucesso!', 'success');
-            
-            closeNewPatientModal();
-            
-            // In a real app, you would add the new patient to the list
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
-
-        function handleEditPatientSubmit(event) {
-            event.preventDefault();
-            
-            // Get form data
-            const formData = new FormData(event.target);
-            const patientData = Object.fromEntries(formData);
-            
-            console.log('Updated patient data:', patientData);
-            
-            // Here you would send data to backend
-            showNotification('Paciente atualizado com sucesso!', 'success');
-            
-            closeEditPatientModal();
-            
-            // In a real app, you would update the patient in the list
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
-
-        // Load patient data for editing
-        function loadPatientData(patientId) {
-            // In a real app, you would fetch patient data from backend
-            console.log('Loading patient data for ID:', patientId);
-            
-            // For demo purposes, we'll use the existing data
-            // In a real implementation, you would populate the form with actual patient data
-        }
-
-        // Filter patients function
-        function filterPatients(searchTerm) {
-            const patientCards = document.querySelectorAll('.bg-white.rounded-lg.shadow');
-            
-            patientCards.forEach(card => {
-                const patientName = card.querySelector('h3').textContent.toLowerCase();
-                const patientAge = card.querySelector('p').textContent.toLowerCase();
-                
-                if (patientName.includes(searchTerm.toLowerCase()) || 
-                    patientAge.includes(searchTerm.toLowerCase())) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-medium transform transition-all duration-300 translate-x-full`;
-            
-            // Set color based on type
-            if (type === 'success') {
-                notification.classList.add('bg-green-500');
-            } else if (type === 'error') {
-                notification.classList.add('bg-red-500');
-            } else {
-                notification.classList.add('bg-blue-500');
-            }
-            
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                notification.classList.add('translate-x-full');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        // Close modals when clicking outside
-        window.onclick = function(event) {
-            const newModal = document.getElementById('newPatientModal');
-            const editModal = document.getElementById('editPatientModal');
-            const deleteModal = document.getElementById('deletePatientModal');
-            
-            if (event.target === newModal) {
-                closeNewPatientModal();
-            }
-            if (event.target === editModal) {
-                closeEditPatientModal();
-            }
-            if (event.target === deleteModal) {
-                closeDeletePatientModal();
-            }
-        }
-
-        // Close modals with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeNewPatientModal();
-                closeEditPatientModal();
-                closeDeletePatientModal();
-            }
-        });
-
-        // Add form event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // New patient form
-            const newPatientForm = document.querySelector('#newPatientModal form');
-            if (newPatientForm) {
-                newPatientForm.addEventListener('submit', handleNewPatientSubmit);
-            }
-            
-            // Edit patient form
-            const editPatientForm = document.querySelector('#editPatientModal form');
-            if (editPatientForm) {
-                editPatientForm.addEventListener('submit', handleEditPatientSubmit);
-            }
-        });
-    </script>
+    @push('scripts')
+        <script src="{{ asset('js/patient-manager.js') }}"></script>
+    @endpush
 </x-app-layout>

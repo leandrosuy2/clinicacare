@@ -43,6 +43,17 @@ Route::middleware(['auth'])->group(function () {
         }
         return redirect()->route('dashboard');
     })->name('doctor.patient-details');
+    
+    // Photo upload routes
+    Route::post('photos/upload', [App\Http\Controllers\PatientPhotoController::class, 'store'])->name('photos.upload');
+    Route::get('patients/{patientId}/photos', [App\Http\Controllers\PatientPhotoController::class, 'index'])->name('photos.index');
+    Route::delete('photos/{photoId}', [App\Http\Controllers\PatientPhotoController::class, 'destroy'])->name('photos.destroy');
+    
+    // Appointment routes
+    Route::post('appointments', [App\Http\Controllers\AppointmentController::class, 'store'])->name('appointments.store');
+    Route::get('patients/{patientId}/appointments', [App\Http\Controllers\AppointmentController::class, 'index'])->name('appointments.index');
+    Route::put('appointments/{appointmentId}/status', [App\Http\Controllers\AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
+    Route::get('appointments/today', [App\Http\Controllers\AppointmentController::class, 'today'])->name('appointments.today');
 });
 
 require __DIR__.'/auth.php';
